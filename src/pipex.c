@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipex.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: dcruz-na <dcruz-na@student.42.fr>          +#+  +:+       +#+        */
+/*   By: danicn <danicn@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/08/23 18:22:49 by dcruz-na          #+#    #+#             */
-/*   Updated: 2022/08/23 21:00:40 by dcruz-na         ###   ########.fr       */
+/*   Updated: 2022/08/24 00:26:15 by danicn           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,8 +50,11 @@ int	main(int argc, char *argv[], char *envp[])
 	fdfinal = open(argv[4], O_WRONLY | O_CREAT, S_IRWXU);
 	pipe(pipex);
 	parent = fork();
-	if (parent < 0)
-		return (-1);
+	if (parent < 0) 
+	{
+		close_parent(pipex, fdinit, fdfinal);
+		return (1);
+	}
 	else if (parent == 0)
 	{
 		child_process(pipex, envp, &fdinit, argv);
@@ -76,15 +79,17 @@ void	child_process(int *pipex, char**envp, int *fdinit, char **argv)
 	arr = ft_split(argv[2], ' ');
 	cmd_path = find_cmd_path(path, arr[0]);
 	if (!cmd_path)
+	{
+		free_path(path, arr, cmd_path);
 		return ;
+	}
 	free(arr[0]);
 	arr[0] = cmd_path;
 	dup2(pipex[1], 1);
 	close(pipex[0]);
 	dup2(*fdinit, 0);
-	if (execve(arr[0], arr, envp) == -1)
-		return ;
-	free_path(path, arr);
+	execve(arr[0], arr, envp);
+	free_path(path, arr, cmd_path);
 }
 
 void	parent_process(int *pipex, char **envp, int *fdfinal, char **argv)
@@ -97,13 +102,15 @@ void	parent_process(int *pipex, char **envp, int *fdfinal, char **argv)
 	arr = ft_split(argv[3], ' ');
 	cmd_path = find_cmd_path(path, arr[0]);
 	if (!cmd_path)
+	{
+		free_path(path, arr, cmd_path);
 		return ;
+	}
 	free(arr[0]);
 	arr[0] = cmd_path;
 	dup2(pipex[0], 0);
 	close(pipex[1]);
 	dup2(*fdfinal, 1);
-	if (execve(arr[0], arr, envp) == -1)
-		return ;
-	free_path(path, arr);
+	execve(arr[0], arr, envp);
+	free_path(path, arr, cmd_path);
 }

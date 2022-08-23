@@ -16,5 +16,5 @@ char	*find_path(char **envp);
 char	*find_cmd_path(char **path, char *cmd);
 void	close_child(int *pipex, int *fd1, int *fd2);
 void	close_parent(int *pipex, int *fd1, int *fd2);
-void	free_path(char **path, char **arr);
+void	free_path(char **path, char **arr, char *cmd_path);
 #endif
